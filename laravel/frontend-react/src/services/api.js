@@ -2,6 +2,9 @@
 
 // Determine base API URL dynamically (supports both Vite dev server and Laravel production)
 const getApiBase = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL.replace(/\/$/, '');
+  }
   if (window.location.hostname === 'localhost' && window.location.port === '3000') {
     return 'http://localhost/bsm_portal/laravel/public/api';
   }

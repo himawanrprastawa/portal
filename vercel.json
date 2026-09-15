@@ -1,0 +1,11 @@
+{
+  "buildCommand": "cd laravel/frontend-react && npm install && npm run build",
+  "outputDirectory": "laravel/public",
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
