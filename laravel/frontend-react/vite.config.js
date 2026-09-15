@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   base: './',
   build: {
-    outDir: path.resolve(__dirname, '../public'),
+    outDir: process.env.VERCEL ? 'dist' : path.resolve(__dirname, '../public'),
     emptyOutDir: false, // Don't wipe everything, will overwrite index.html and assets
   },
   server: {

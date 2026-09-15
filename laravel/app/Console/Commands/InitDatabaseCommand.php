@@ -318,3 +318,4 @@ class InitDatabaseCommand extends Command
         return 0;
     }
 }
+
