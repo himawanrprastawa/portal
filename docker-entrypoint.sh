@@ -1,32 +1,49 @@
 #!/bin/bash
-set -e
 
-# Railway dynamically injects $PORT (default to 8080 if not set)
-PORT="${PORT:-8080}"
-sed -i "s/Listen 80/Listen ${PORT}/g" /etc/apache2/ports.conf 2>/dev/null || true
-sed -i "s/8080/${PORT}/g" /etc/apache2/ports.conf 2>/dev/null || true
-sed -i "s/:80/:${PORT}/g" /etc/apache2/sites-available/000-default.conf 2>/dev/null || true
-sed -i "s/:8080/:${PORT}/g" /etc/apache2/sites-available/000-default.conf 2>/dev/null || true
-
-echo "=== Starting BSM Operations Portal backend on port $PORT ==="
+# Ensure .env file exists in container for Laravel
+if [ ! -f /var/www/html/laravel/.env ]; then
+    echo "Creating .env from .env.example..."
+    cp /var/www/html/laravel/.env.example /var/www/html/laravel/.env
+fi
 
 cd /var/www/html/laravel
 
-# Generate APP_KEY if not already set in environment
+# Ensure APP_KEY exists
 if [ -z "$APP_KEY" ]; then
-    echo "Generating temporary application key..."
-    php artisan key:generate --force
+    echo "Generating Application Key..."
+    php artisan key:generate --force || true
 fi
 
-# Run database auto-migration and seeding if database host is configured
+# Configure Apache port dynamically based on Railway $PORT (default 8080)
+PORT="${PORT:-8080}"
+echo "Configuring Apache to listen on port $PORT..."
+echo "Listen ${PORT}" > /etc/apache2/ports.conf
+
+cat <<EOF > /etc/apache2/sites-available/000-default.conf
+<VirtualHost *:${PORT}>
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/html/laravel/public
+
+    <Directory /var/www/html/laravel/public>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog \${APACHE_LOG_DIR}/error.log
+    CustomLog \${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+EOF
+
+# Initialize database schema and initial data if DB_HOST is present
 if [ -n "$DB_HOST" ]; then
-    echo "Configuring and migrating database on $DB_HOST:$DB_PORT..."
+    echo "Attempting database initialization on $DB_HOST..."
     php artisan portal:init-db || true
 fi
 
-# Clear any cached configuration to use runtime environment variables
-php artisan config:clear
-php artisan route:clear
+# Clear config and route cache for fresh runtime variables
+php artisan config:clear || true
+php artisan route:clear || true
 
-echo "=== Apache HTTP Server is ready to handle requests ==="
+echo "=== BSM Portal Backend is running on port $PORT ==="
 exec apache2-foreground

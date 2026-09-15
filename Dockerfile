@@ -7,6 +7,7 @@ WORKDIR /var/www/html
 RUN apt-get update && apt-get install -y \
     git \
     curl \
+    dos2unix \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
@@ -50,9 +51,9 @@ RUN mkdir -p /var/www/html/laravel/storage/framework/cache/data \
     && chown -R www-data:www-data /var/www/html/laravel/storage /var/www/html/laravel/bootstrap/cache /var/www/html/laravel/public/uploads \
     && chmod -R 775 /var/www/html/laravel/storage /var/www/html/laravel/bootstrap/cache /var/www/html/laravel/public/uploads
 
-# Setup entrypoint
+# Setup entrypoint with dos2unix
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+RUN dos2unix /usr/local/bin/docker-entrypoint.sh && chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 8080
 
