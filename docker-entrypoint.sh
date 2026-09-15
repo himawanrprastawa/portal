@@ -14,16 +14,17 @@ if [ -z "$APP_KEY" ]; then
     php artisan key:generate --force || true
 fi
 
-# Configure Apache port: Listen on 80, 3000, 8080, and $PORT for Railway compatibility
+# Configure Apache port: Listen on $PORT (default 8080) and 8080
 PORT="${PORT:-8080}"
-echo "Configuring Apache to listen on 80, 3000, 8080, and $PORT..."
-printf "Listen 80\nListen 3000\nListen 8080\n" > /etc/apache2/ports.conf
-if [ "$PORT" != "80" ] && [ "$PORT" != "3000" ] && [ "$PORT" != "8080" ]; then
-    echo "Listen ${PORT}" >> /etc/apache2/ports.conf
+echo "Configuring Apache to listen on port $PORT..."
+if [ "$PORT" = "8080" ]; then
+    echo "Listen 8080" > /etc/apache2/ports.conf
+else
+    printf "Listen ${PORT}\nListen 8080\n" > /etc/apache2/ports.conf
 fi
 
 cat <<EOF > /etc/apache2/sites-available/000-default.conf
-<VirtualHost *:80 *:3000 *:8080 *:${PORT}>
+<VirtualHost *:* >
     ServerAdmin webmaster@localhost
     DocumentRoot /var/www/html/laravel/public
 
@@ -33,10 +34,13 @@ cat <<EOF > /etc/apache2/sites-available/000-default.conf
         Require all granted
     </Directory>
 
-    ErrorLog \${APACHE_LOG_DIR}/error.log
-    CustomLog \${APACHE_LOG_DIR}/access.log combined
+    ErrorLog /dev/stderr
+    CustomLog /dev/stdout combined
 </VirtualHost>
 EOF
+
+# Test Apache configuration
+apache2ctl -t
 
 # Clear config and route cache for fresh runtime variables
 php artisan config:clear || true
