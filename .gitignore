@@ -1,0 +1,46 @@
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.crt
+credentials.json
+service-account*.json
+token.json
+auth.json
+
+# Dependencies
+**/node_modules/
+/laravel/vendor/
+
+# User Uploaded Documents, Photos, & Personal Data
+/laravel/public/uploads/*
+!/laravel/public/uploads/.gitkeep
+/laravel/storage/app/public/*
+!/laravel/storage/app/public/.gitkeep
+/laravel/storage/app/uploads/*
+!/laravel/storage/app/uploads/.gitkeep
+
+# SQLite Databases & SQL Dumps
+*.sqlite
+*.sqlite3
+*.db
+/laravel/database/*.sql
+/laravel/database/database.sqlite
+
+# Laravel Storage & Logs
+/laravel/storage/logs/*.log
+/laravel/storage/framework/cache/*
+!/laravel/storage/framework/cache/.gitkeep
+/laravel/storage/framework/sessions/*
+!/laravel/storage/framework/sessions/.gitkeep
+/laravel/storage/framework/views/*
+!/laravel/storage/framework/views/.gitkeep
+
+# IDE & Workspace
+.vscode/
+.idea/
+*.code-workspace
+.DS_Store
+Thumbs.db
