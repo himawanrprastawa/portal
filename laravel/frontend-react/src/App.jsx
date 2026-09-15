@@ -1,3 +1,4 @@
+// BSM Operations & Validation Portal - Production Deployment Vercel & Railway
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { api } from './services/api';
