@@ -14,16 +14,16 @@ if [ -z "$APP_KEY" ]; then
     php artisan key:generate --force || true
 fi
 
-# Configure Apache port: Listen on 80, 8080, and $PORT for Railway compatibility
+# Configure Apache port: Listen on 80, 3000, 8080, and $PORT for Railway compatibility
 PORT="${PORT:-8080}"
-echo "Configuring Apache to listen on 80, 8080, and $PORT..."
-printf "Listen 80\nListen 8080\n" > /etc/apache2/ports.conf
-if [ "$PORT" != "80" ] && [ "$PORT" != "8080" ]; then
+echo "Configuring Apache to listen on 80, 3000, 8080, and $PORT..."
+printf "Listen 80\nListen 3000\nListen 8080\n" > /etc/apache2/ports.conf
+if [ "$PORT" != "80" ] && [ "$PORT" != "3000" ] && [ "$PORT" != "8080" ]; then
     echo "Listen ${PORT}" >> /etc/apache2/ports.conf
 fi
 
 cat <<EOF > /etc/apache2/sites-available/000-default.conf
-<VirtualHost *:80 *:8080 *:${PORT}>
+<VirtualHost *:80 *:3000 *:8080 *:${PORT}>
     ServerAdmin webmaster@localhost
     DocumentRoot /var/www/html/laravel/public
 
