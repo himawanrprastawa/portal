@@ -14,13 +14,16 @@ if [ -z "$APP_KEY" ]; then
     php artisan key:generate --force || true
 fi
 
-# Configure Apache port dynamically based on Railway $PORT (default 8080)
+# Configure Apache port: Listen on 80, 8080, and $PORT for Railway compatibility
 PORT="${PORT:-8080}"
-echo "Configuring Apache to listen on port $PORT..."
-echo "Listen ${PORT}" > /etc/apache2/ports.conf
+echo "Configuring Apache to listen on 80, 8080, and $PORT..."
+printf "Listen 80\nListen 8080\n" > /etc/apache2/ports.conf
+if [ "$PORT" != "80" ] && [ "$PORT" != "8080" ]; then
+    echo "Listen ${PORT}" >> /etc/apache2/ports.conf
+fi
 
 cat <<EOF > /etc/apache2/sites-available/000-default.conf
-<VirtualHost *:${PORT}>
+<VirtualHost *:80 *:8080 *:${PORT}>
     ServerAdmin webmaster@localhost
     DocumentRoot /var/www/html/laravel/public
 
@@ -35,15 +38,16 @@ cat <<EOF > /etc/apache2/sites-available/000-default.conf
 </VirtualHost>
 EOF
 
-# Initialize database schema and initial data if DB_HOST is present
-if [ -n "$DB_HOST" ]; then
-    echo "Attempting database initialization on $DB_HOST..."
-    php artisan portal:init-db || true
-fi
-
 # Clear config and route cache for fresh runtime variables
 php artisan config:clear || true
 php artisan route:clear || true
 
-echo "=== BSM Portal Backend is running on port $PORT ==="
+# Run database schema auto-init asynchronously in background so Apache boots instantly
+(
+    sleep 3
+    echo "Running background database verification..."
+    php artisan portal:init-db || true
+) &
+
+echo "=== BSM Portal Backend starting Apache on ports 80, 8080, and $PORT ==="
 exec apache2-foreground
