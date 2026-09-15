@@ -9,6 +9,7 @@ export default defineConfig({
     outDir: process.env.VERCEL ? 'dist' : path.resolve(__dirname, '../public'),
     emptyOutDir: false, // Don't wipe everything, will overwrite index.html and assets
   },
+  // Vercel deployment configuration
   server: {
     port: 3000,
     open: true
