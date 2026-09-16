@@ -26,10 +26,20 @@ RUN a2enmod rewrite headers
 # Copy project files
 COPY . /var/www/html
 
+# Ensure .env exists and generate key during build
+RUN cp /var/www/html/laravel/.env.example /var/www/html/laravel/.env \
+    && chown www-data:www-data /var/www/html/laravel/.env \
+    && chmod 664 /var/www/html/laravel/.env
+
+# Install Composer PHP dependencies & generate app key
+RUN cd /var/www/html/laravel \
+    && composer install --no-dev --optimize-autoloader --no-interaction \
+    && php artisan key:generate --force
+
 # Set Apache DocumentRoot to Laravel public directory
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/laravel/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/000-default.conf
-RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/000-default.conf \
+    && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 # Configure directory overrides in Apache
 RUN printf '<Directory /var/www/html/laravel/public>\n\
@@ -38,9 +48,6 @@ RUN printf '<Directory /var/www/html/laravel/public>\n\
     Require all granted\n\
 </Directory>\n' > /etc/apache2/conf-available/laravel.conf \
     && a2enconf laravel
-
-# Install Composer PHP dependencies
-RUN cd /var/www/html/laravel && composer install --no-dev --optimize-autoloader --no-interaction
 
 # Prepare storage directories and set proper permissions
 RUN mkdir -p /var/www/html/laravel/storage/framework/cache/data \

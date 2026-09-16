@@ -8,10 +8,20 @@ fi
 
 cd /var/www/html/laravel
 
-# Ensure APP_KEY exists
-if [ -z "$APP_KEY" ]; then
-    echo "Generating Application Key..."
-    php artisan key:generate --force || true
+# Inject Railway MySQL environment variables into .env if present
+if [ -n "$MYSQLHOST" ] || [ -n "$DB_HOST" ]; then
+    H="${DB_HOST:-$MYSQLHOST}"
+    P="${DB_PORT:-${MYSQLPORT:-3306}}"
+    D="${DB_DATABASE:-${MYSQLDATABASE:-bsm_operations_db}}"
+    U="${DB_USERNAME:-${MYSQLUSER:-root}}"
+    PW="${DB_PASSWORD:-$MYSQLPASSWORD}"
+
+    sed -i "s/DB_CONNECTION=.*/DB_CONNECTION=mysql/" /var/www/html/laravel/.env
+    sed -i "s/DB_HOST=.*/DB_HOST=${H}/" /var/www/html/laravel/.env
+    sed -i "s/DB_PORT=.*/DB_PORT=${P}/" /var/www/html/laravel/.env
+    sed -i "s/DB_DATABASE=.*/DB_DATABASE=${D}/" /var/www/html/laravel/.env
+    sed -i "s/DB_USERNAME=.*/DB_USERNAME=${U}/" /var/www/html/laravel/.env
+    sed -i "s/DB_PASSWORD=.*/DB_PASSWORD=${PW}/" /var/www/html/laravel/.env
 fi
 
 # Configure Apache port: Listen on $PORT (default 8080) and 8080
